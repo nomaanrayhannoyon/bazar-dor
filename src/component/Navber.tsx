@@ -1,4 +1,5 @@
 import React from 'react';
+import Navlink from './Navlink';
 
 const Navbar = () => {
   return (
@@ -30,8 +31,8 @@ const Navbar = () => {
             সাইন আপ
           </button>
         </div>
-
       </div>
+      <Navlink />
     </header>
   );
 };
