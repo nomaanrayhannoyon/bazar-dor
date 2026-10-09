@@ -1,5 +1,6 @@
 import HeroBanner from "@/component/Herobannar";
 import Marquee from "@/component/Marquee";
+import PriceDecreaseSection from "@/component/PriceDecreaseSection";
 import PriceIncreaseSection from "@/component/PriceIncreaseSection";
 
 export default function Home() {
@@ -8,6 +9,7 @@ export default function Home() {
  < Marquee />
  <HeroBanner />
  <PriceIncreaseSection />
+ <PriceDecreaseSection />
     </div>
   );
 };
