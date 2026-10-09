@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import {Noto_Serif_Bengali } from "next/font/google";
 import "./globals.css";
 import Navber from "@/component/Navber";
+import Footer from "@/component/Footer";
 
 const Notoserifbengali = Noto_Serif_Bengali({
   variable: "--font-geist-sans",
@@ -22,7 +23,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <Navber />
         {children}
+         <Footer  />
         </body>
+      
     </html>
   );
 }
