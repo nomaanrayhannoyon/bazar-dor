@@ -1,123 +1,222 @@
 
-import React from "react";
+"use client";
 
-           const PriceIncreaseSection = async () => {
-          const res = await fetch(
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-           "https://api.api-store.workers.dev/api/bazardor/products"
-                 );
+import { authClient } from "@/lib/auth-client";
 
-                            if (!res.ok) {
+type Product = {
+  id: number;
+  slug: string;
 
-                throw new Error("Failed to fetch products");
-                }
+  nameBn: string;
+  unit: string;
+  image: string;
+  today: number;
 
-                 const data = await res.json();
+  change: {
+    dir: string;
+    pct: number;
+  };
+};
+
+const PriceDecreaseSection = () => {
+
+  const router = useRouter();
+
+  const [items, setItems] = useState<Product[]>([]);
+
+  const [loading, setLoading] = useState(true);
+
+  const [errorMessage, setErrorMessage] = useState("");
 
 
-                const figmaItems = data
+  useEffect(() => {
+    const loadProducts = async () => {
 
-                       .filter((item: any) => item.change.dir === "up")
+      try {
+        const res = await fetch(
+          "https://openapi.programming-hero.com/api/bazardor/products"
+        );
 
-                         .sort(
-                  (a: any, b: any) =>
+        if (!res.ok) {
+          throw new Error("Failed to fetch products");
 
-                      b.change.pct - a.change.pct
-                     )
-                 .slice(0, 6);
+        }
 
-                  return (
-                         <div className="max-w-7xl mx-auto px-4 my-6">
+        const data = await res.json();
 
-                                  <div className="flex items-center gap-2 mb-4">
+        const products: Product[] = Array.isArray(data)
+          ? data
+          : data.products ?? data.data ?? [];
 
-                      <span className="text-red-500 font-bold text-base">
-                    ▲
-                </span>
+        const decreasedProducts = products
 
-                <h2 className="text-lg md:text-xl font-bold text-gray-900">
+          .filter((item) => item.change?.dir === "down")
+          .sort((a, b) => a.change.pct - b.change.pct)
 
-                    আজ দাম বেড়েছে
-                </h2>
+          .slice(0, 6);
 
-            </div>
+        setItems(decreasedProducts);
+      } catch (error) {
 
-                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        console.error("Failed to fetch products:", error);
 
-                        {figmaItems.map((item: any) => (
-                         <div
-                        key={item.id}
+        setErrorMessage("পণ্যের তথ্য লোড করা যায়নি।");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-                        className="bg-white border border-gray-200/80 rounded-xl p-4 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between"
-                    >
-                        <div className="flex items-start gap-3">
+    loadProducts();
+  }, []);
 
-                            <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center text-xl shrink-0 border border-gray-100">
-                                {item.image}
 
-                            </div>
+  const handleProductClick = async (item: Product) => {
 
-                            <div>
-                                <h3 className="font-semibold text-gray-900 text-base">
+    const detailsUrl = `/product/${item.slug}`;
 
-                                    {item.nameBn}
-                                </h3>
+    try {
+      const result = await authClient.getSession();
 
-                                <p className="text-xs text-gray-500">
 
-                                    প্রতি {item.unit === "kg"
-                                        ? "কেজি"
+      if (result.data?.session) {
 
-                                        : item.unit}
-                                </p>
+        router.push(detailsUrl);
 
-                            </div>
+      } else {
+        router.push(
+          `/sign-in?callbackURL=${encodeURIComponent(detailsUrl)}`
 
-                            </div>
+        );
+      }
+    } catch (error) {
 
-                        <div className="mt-4 pt-3 border-t border-gray-100 flex items-end justify-between">
+      console.error("Session check failed:", error);
 
-                            <div>
 
-                                <span className="text-xs text-gray-500 block">
+      router.push(
+        
+        `/sign-in?callbackURL=${encodeURIComponent(detailsUrl)}`
 
-                                    আজকের দাম
-                                </span>
+      );
+    }
+  };
 
-                                <span className="text-lg font-bold text-gray-900">
+  return (
+    <div className="max-w-7xl mx-auto px-4 my-6">
 
-                                    {Number(item.today).toLocaleString("bn-BD")}
+      <div className="flex items-center gap-2 mb-4">
 
-                                    {" "}
-                                    <span className="text-sm font-normal text-gray-600">
+        <span className="text-green-600 font-bold text-base">
+          ▼
+        </span>
 
-                                        টাকা
+        <h2 className="text-lg md:text-xl font-bold text-gray-900">
 
-                                    </span>
+          আজ দাম কমেছে
+        </h2>
+      </div>
 
-                                </span>
-                            </div>
+      {loading ? (
+        <p className="text-gray-500">প্রোডাক্ট লোড হচ্ছে...</p>
 
-                            <div className="bg-red-50 text-red-600 px-2 py-0.5 rounded text-xs font-semibold flex items-center gap-1">
-                                <span>▲</span>
+      ) : errorMessage ? (
+        <p className="text-red-600">{errorMessage}</p>
 
-                                {Math.abs(item.change.pct).toLocaleString("bn-BD")}%
+      ) : items.length === 0 ? (
+        <p className="text-gray-500">
 
-                               </div>
+          বর্তমানে দাম কমেছে এমন কোনো পণ্য পাওয়া যায়নি।
 
-                            </div>
-   
-                           </div>
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {items.map((item) => (
 
-                        ))}
+            <button
+              key={item.id}
 
-                        </div>
+              type="button"
+              onClick={() => handleProductClick(item)}
 
-                             </div>
+              className="w-full text-left bg-white border border-gray-200/80 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
+            >
+              <div className="flex items-start gap-3">
 
-                      );
+                <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center text-xl shrink-0 border border-gray-100">
+                  {item.image}
 
-           };
+                </div>
 
-export default PriceIncreaseSection;
+                <div>
 
+
+                  <h3 className="font-semibold text-gray-900 text-base">
+                    {item.nameBn}
+
+                  </h3>
+
+                  <p className="text-xs text-gray-500">
+
+                    প্রতি{" "}
+
+                    {item.unit === "kg" ? "কেজি" : item.unit}
+                  </p>
+
+                </div>
+
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-gray-100 flex items-end justify-between">
+                <div>
+
+                  <span className="text-xs text-gray-500 block">
+                    আজকের দাম
+
+                  </span>
+
+                  <span className="text-lg font-bold text-gray-900">
+
+                    {Number(item.today).toLocaleString("bn-BD")}{" "}
+
+                    <span className="text-sm font-normal text-gray-600">
+                      টাকা
+                    </span>
+
+                  </span>
+
+
+                </div>
+
+
+                <div className="bg-green-50 text-green-600 px-2 py-0.5 rounded text-xs font-semibold flex items-center gap-1">
+                  <span>▼</span>
+
+                  {Math.abs(item.change.pct).toLocaleString("bn-BD")}%
+                </div>
+
+              </div>
+
+
+              <p className="mt-3 text-sm font-semibold text-green-700">
+                বিস্তারিত দেখুন →
+
+              </p>
+            </button>
+
+          ))}
+
+
+        </div>
+
+      )}
+
+    </div>
+
+  );
+  
+};
+
+export default PriceDecreaseSection;
