@@ -1,29 +1,29 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
 export function proxy(request: NextRequest) {
-
   const sessionCookie = getSessionCookie(request);
 
   if (!sessionCookie) {
 
-    const loginUrl = new URL("/login", request.url);
+    const loginUrl = new URL("/sign-in", request.url);
 
     loginUrl.searchParams.set(
       "callbackURL",
       request.nextUrl.pathname + request.nextUrl.search
-
     );
 
     return NextResponse.redirect(loginUrl);
-
   }
 
   return NextResponse.next();
 }
 
-
 export const config = {
-  matcher: ["/product/:path*"],
+
+  matcher: [
+    "/product/:path*",
+    "/products/:path*",
+    "/category/:path*"
+  ],
 };

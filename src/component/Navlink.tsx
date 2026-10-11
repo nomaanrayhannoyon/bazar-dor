@@ -70,11 +70,9 @@ const Navlink = async () => {
 
             <span>{category.nameBn}</span>
           </Link>
-
+          
         ))}
-
       </div>
-      
     </nav>
   );
 };
